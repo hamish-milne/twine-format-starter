@@ -1,0 +1,17 @@
+/* This ensures linting messages are visible */
+.CodeMirror-lint-tooltip {
+  z-index: 500;
+}
+
+/* This fixes CodeMirror's line numbers in Twine 2.4's dark mode */
+.CodeMirror-linenumber {
+  color: var(--gray);
+}
+
+.CodeMirror-linenumbers {
+  background-color: var(--off-white);
+}
+
+.CodeMirror-gutters {
+  border-color: var(--light-gray);
+}

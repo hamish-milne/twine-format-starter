@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "orta.vscode-jest",
+    "arcanis.vscode-zipfs",
+    "esbenp.prettier-vscode"
+  ]
+}

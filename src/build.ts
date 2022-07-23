@@ -3,7 +3,7 @@ import { build, BuildOptions, OnLoadResult, Plugin } from "esbuild";
 import { pnpPlugin } from "@yarnpkg/esbuild-plugin-pnp";
 import { replace } from "esbuild-plugin-replace";
 import PostHTML from "posthtml";
-import { NodeTag, parser } from "posthtml-parser";
+import { NodeTag } from "posthtml-parser";
 import htmlnano from "htmlnano";
 import {
   copyFileSync,
@@ -24,7 +24,7 @@ function nullLoader(filter: RegExp): Plugin {
   return {
     name: "nullLoader",
     setup(build) {
-      build.onLoad({ filter }, (_) => {
+      build.onLoad({ filter }, () => {
         return {
           contents: "",
           loader: "js",
@@ -198,14 +198,33 @@ function moduleOptions(defines: Record<string, string>): BuildOptions {
 // resulting bundle.
 async function buildJs(options: BuildOptions): Promise<string> {
   const result = await build(options);
-  let text: string;
+  let text: string | null = null;
   for (const file of result.outputFiles ?? []) {
     writeFileSync(file.path, file.contents);
     if (file.path.endsWith(".js")) {
       text = file.text;
     }
   }
-  return text!;
+  if (!text) {
+    throw new Error("No JS output");
+  }
+  return text;
+}
+
+// For posthtml-inline-assets, use 'require.resolve' to resolve the asset path.
+// This allows us to use package assets, such as fontawesome.
+function transform(tag: string, rel: string | null, attr: string) {
+  return {
+    resolve(node: NodeTag) {
+      return (
+        node.tag === tag &&
+        node.attrs &&
+        node.attrs[attr] &&
+        (rel === null || node.attrs.rel === rel) &&
+        require.resolve(node.attrs[attr] as string)
+      );
+    },
+  };
 }
 
 async function buildHtml(input: string): Promise<string> {
@@ -215,39 +234,13 @@ async function buildHtml(input: string): Promise<string> {
     posthtmlInlineAssets({
       errors: "warn",
       transforms: {
-        image: {
-          resolve(node: NodeTag) {
-            return (
-              node.tag === "img" &&
-              node.attrs &&
-              node.attrs.src &&
-              require.resolve(node.attrs.src as string)
-            );
-          },
-          transform(
-            node: NodeTag,
-            args: { from: string; buffer: Buffer; mime: string }
-          ) {
-            if (!node.attrs) {
-              return;
-            }
-            if (args.from.toLowerCase().endsWith(".svg")) {
-              const svgRoot = parser(
-                args.buffer.toString("utf8")
-              )[0] as NodeTag;
-              node.tag = "svg";
-              Object.assign(node.attrs, svgRoot.attrs);
-              delete node.attrs.src;
-              node.content = svgRoot.content as any[];
-            } else {
-              node.attrs.src = `data:${args.mime};base64,${args.buffer.toString(
-                "base64"
-              )}`;
-            }
-          },
-        },
+        image: transform("img", null, "src"),
+        script: transform("script", null, "src"),
+        style: transform("link", "stylesheet", "href"),
+        favicon: transform("link", "icon", "href"),
       },
     }),
+    // We can disable SVG and JS minifying, since that's already done by this point.
     htmlnano({
       minifyCss: true,
       minifyJs: false,
@@ -258,33 +251,56 @@ async function buildHtml(input: string): Promise<string> {
   return result.html;
 }
 
+// The main build function.
+// Since this is a multi-step process, we unfortunately can't use esbuild's watch functionality.
 async function doBuild() {
   mkdirSync("build", { recursive: true });
+
+  // The 'icon' property in a story format must be a relative path to an image file.
+  // It cannot be a data URL because Twine prepends the format URL's directory to the
+  // image source.
   const pkg = (await import("../package.json")).default;
   const iconExt = path.extname(pkg.icon);
   copyFileSync(require.resolve(pkg.icon), `./build/icon${iconExt}`);
   pkg.icon = `icon${iconExt}`;
+
+  // Inject the contents of 'package.json' into the bundle.
   const packageDefines = flattenJson(pkg, "PACKAGE.", [
     "dependencies",
     "devDependencies",
   ]);
-  const hydrate_raw = await buildJs({
-    ...moduleOptions(packageDefines),
-    entryPoints: ["./src/editor/hydrate.ts"],
-    outfile: "./build/hydrate.js",
-    globalName: "DUMMY_GLOBAL_NAME",
-  });
-  // NOTE: To ensure sourcemaps work correctly, these two strings should be the same length:
-  const hydrate = hydrate_raw.replace(
-    "var DUMMY_GLOBAL_NAME",
-    "this.editorExtensions"
-  );
-  await buildJs({
-    ...moduleOptions(packageDefines),
-    entryPoints: ["./src/player/index.ts"],
-    outfile: "./build/player.js",
-  });
-  const sourceHtml = await buildHtml("./src/player/index.html");
+
+  async function buildEditor() {
+    const hydrate_raw = await buildJs({
+      ...moduleOptions(packageDefines),
+      entryPoints: ["./src/editor/hydrate.ts"],
+      outfile: "./build/hydrate.js",
+      // This allows us to retrieve the contents of 'hydrate.ts's exports:
+      globalName: "DUMMY_GLOBAL_NAME",
+    });
+    // NOTE: To ensure sourcemaps work correctly, these two strings should be the same length:
+    return hydrate_raw.replace(
+      "var DUMMY_GLOBAL_NAME",
+      "this.editorExtensions"
+    );
+  }
+
+  async function buildPlayer() {
+    await buildJs({
+      ...moduleOptions(packageDefines),
+      entryPoints: ["./src/player/index.ts"],
+      outfile: "./build/player.js",
+    });
+
+    return await buildHtml("./src/player/index.html");
+  }
+
+  const [hydrate, sourceHtml] = await Promise.all([
+    buildEditor(),
+    buildPlayer(),
+  ]);
+
+  // Build the final output:
   await buildJs({
     ...common,
     define: {
@@ -296,6 +312,8 @@ async function doBuild() {
     outfile: "./build/format.js",
     sourcemap: false,
   });
+
+  // Remove the intermediate files:
   for (const path of ["./build/player.js", "./build/hydrate.js"]) {
     unlinkSync(path);
   }

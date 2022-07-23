@@ -30,7 +30,7 @@ export function localSetup(cm: Editor) {
   cm.setOption("blockCommentStart", "<!--");
   cm.setOption("blockCommentEnd", "-->");
   // HACK: Force a change to get it to lint for the first time
-  for (let f of (cm as any)._handlers.change) {
+  for (const f of (cm as any)._handlers.change) {
     f(cm);
   }
 }

@@ -2,6 +2,7 @@
   "recommendations": [
     "orta.vscode-jest",
     "arcanis.vscode-zipfs",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint"
   ]
 }

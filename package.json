@@ -17,20 +17,43 @@
     "build": "ts-node ./src/build.ts",
     "test": "jest --coverage",
     "watch": "nodemon --watch src --ext ts,js,cjs,html,css --exec 'yarn build http://localhost:8080/ '",
-    "serve": "http-server ./build -c-1 --cors",
+    "serve": "http-server ./build -c-1 --cors --port 8080",
     "dev": "concurrently 'yarn:watch' 'yarn:serve'"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "prettier"
+    ],
+    "rules": {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-non-null-assertion": "off"
+    },
+    "ignorePatterns": [
+      "build/**"
+    ]
   },
   "devDependencies": {
     "@swc/core": "^1.2.218",
     "@types/codemirror": "^5.60.5",
     "@types/jest": "^28.1.6",
     "@types/node": "^18.0.6",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
     "@yarnpkg/esbuild-plugin-pnp": "^3.0.0-rc.12",
     "@yarnpkg/sdks": "^3.0.0-rc.12",
     "concurrently": "^7.3.0",
     "cssnano": "^5.1.12",
     "esbuild": "^0.14.49",
     "esbuild-plugin-replace": "^1.2.0",
+    "eslint": "^8.20.0",
+    "eslint-config-prettier": "^8.5.0",
     "htmlnano": "^2.0.2",
     "http-server": "^14.1.1",
     "jest": "^28.1.3",

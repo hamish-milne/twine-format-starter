@@ -9,5 +9,6 @@ declare module "codemirror" {
     }
   ): Mode<unknown>;
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
   interface EditorConfiguration extends CommentOptions {}
 }

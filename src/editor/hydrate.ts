@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { getEditorInstances, init } from "./twine_hacks";
 import toolbar from "./toolbar";
 import * as commands from "./commands";

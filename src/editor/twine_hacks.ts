@@ -2,16 +2,16 @@ import type { Editor } from "codemirror";
 
 export function getPassages(): { text: string; tags: string[] }[] {
   try {
-    let root24 = document.getElementsByClassName("passage-map")[0];
+    const root24 = document.getElementsByClassName("passage-map")[0];
     if (root24) {
-      let obj = (root24 as any)[
+      const obj = (root24 as any)[
         Object.keys(root24).find((x) =>
           x.startsWith("__reactInternalInstance$")
         )!
       ];
       return obj.child.memoizedProps.passages ?? [];
     }
-    let root23 = document.getElementById("storyEditView");
+    const root23 = document.getElementById("storyEditView");
     if (root23) {
       return (root23 as any).__vue__.story.passages ?? [];
     }

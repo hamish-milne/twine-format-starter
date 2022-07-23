@@ -8,7 +8,7 @@ export default function (config: EditorConfiguration): Mode<unknown> {
   return window.CodeMirror.simpleMode(config, {
     start: [
       {
-        regex: /(\[\[)(.*?)(<\-)/,
+        regex: /(\[\[)(.*?)(<-)/,
         token: ["bracket", "link", "special", "bracket"],
       },
       {

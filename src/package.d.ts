@@ -1,1 +1,1 @@
-declare var PACKAGE: typeof import("../package.json");
+declare const PACKAGE: typeof import("../package.json");

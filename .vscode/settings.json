@@ -10,5 +10,7 @@
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "jest.jestCommandLine": "yarn jest",
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "eslint.runtime": "yarn",
+  "eslint.nodePath": ".yarn/sdks"
 }

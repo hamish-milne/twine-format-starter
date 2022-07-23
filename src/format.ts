@@ -1,6 +1,7 @@
 // The following are injected by the build system:
-declare var HYDRATE: string;
-declare var SOURCE: string;
+declare const HYDRATE: string;
+declare const SOURCE: string;
+// eslint-disable-next-line
 declare var storyFormat: (format: any) => void;
 window.storyFormat({
   name: PACKAGE.title,

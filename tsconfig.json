@@ -10,9 +10,12 @@
     "sourceMap": true,
     "strict": true,
     "alwaysStrict": false,
-    "lib": ["DOM", "ES2015"]
+    "lib": ["DOM", "ES2015"],
+    "outDir": "dist"
   },
+  "include": ["src/**/*.ts"],
   "ts-node": {
-    "swc": true
+    "swc": true,
+    "files": false
   }
 }

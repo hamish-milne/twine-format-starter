@@ -268,6 +268,7 @@ async function doBuild() {
   const packageDefines = flattenJson(pkg, "PACKAGE.", [
     "dependencies",
     "devDependencies",
+    "eslintConfig",
   ]);
 
   async function buildEditor() {

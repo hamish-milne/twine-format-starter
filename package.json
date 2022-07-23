@@ -14,7 +14,7 @@
   },
   "packageManager": "yarn@3.2.1",
   "scripts": {
-    "build": "ts-node ./src/build.ts",
+    "build": "node -r ts-node/register ./src/build.ts",
     "test": "jest --coverage",
     "watch": "nodemon --watch src --ext ts,js,cjs,html,css --exec 'yarn build http://localhost:8080/ '",
     "serve": "http-server ./build -c-1 --cors --port 8080",
